@@ -1,0 +1,111 @@
+'''
+Created on May 3, 2017
+
+@author: Bojan
+
+'''
+
+import pandas as pd
+import numpy as np
+from numpy.linalg import inv
+from matplotlib import pyplot as plt
+from sklearn import linear_model 
+from sklearn.metrics import accuracy_score
+
+def sigmoid(x,theta):
+    return 1/(1+np.exp(-1*x.dot(theta)))
+  
+x=pd.read_csv('http://cs229.stanford.edu/ps/ps1/logistic_x.txt',sep='  ',header=None,engine='python')
+y=pd.read_csv('http://cs229.stanford.edu/ps/ps1/logistic_y.txt',header=None)
+x.columns=['X1','X2']
+x['X0']=1.0
+y.columns=['Y']
+for i in range(len(y['Y'])):
+    if y['Y'][i]==-1.0:
+        y['Y'][i]=0.0
+         
+def diag(x):
+    return np.diagflat(x)
+  
+def J(Y,X,theta):
+    H=sigmoid(X,theta)
+    Hlog=np.log(H)
+    J=Y.transpose().dot(Hlog)+((1-Y).transpose()).dot(1-Hlog)
+    grad_J=(Y-H).transpose().dot(X)
+    hessian_J=(X.transpose().dot(diag(np.multiply(H,(1-H))))).dot(X)
+    inv_hessian=inv(hessian_J)
+    return (float(J),grad_J.transpose(),inv_hessian)
+      
+      
+   
+X=x.as_matrix()
+Y=y.as_matrix()
+m=len(y['Y'])
+a=np.array([2,0,1])
+X=X[:,a]
+  
+theta=np.matrix('0;0;0')
+J_list=[]
+num_iter=[]
+i=0
+while True:
+    J_list.append(J(Y, X, theta)[0])
+    num_iter.append(i)
+    i+=1
+    theta=theta+J(Y, X, theta)[2].dot(J(Y, X, theta)[1])
+    if (J(Y, X, theta)[0]-J_list[i-1]<1e-10):
+        break
+        
+         
+#===============================================================================
+# plt.figure('Newton Rapson for Logistic Regression')
+# plt.title('Cost function vs # of iterations')
+# plt.plot(num_iter,J_list,label='Cost')
+# plt.text(3,100,'Theta = '+str(theta),fontsize=14)
+# plt.legend(loc='upper left',frameon=False)
+# plt.xlabel('Number of iterations',fontsize=14)
+# plt.ylabel('Cost',fontsize=14)
+# plt.show()
+#===============================================================================
+sk_log=linear_model.LogisticRegression(C=1e5)
+sk_log.fit(X,Y.ravel())
+
+print(sk_log.coef_)
+def log_model(x):
+    return 1/(1+np.exp(-(x.dot(sk_log.coef_.T))))
+
+x_pred=[]
+positive_x1_list=[]
+positive_x2_list=[]
+negative_x1_list=[]
+negative_x2_list=[]
+X_pred=log_model(X)
+for i in range(m):
+    if y['Y'][i]>=0.5:
+        x_pred.append(1.0)
+        positive_x1_list.append(X[i][1])
+        positive_x2_list.append(X[i][2])
+    else:
+        x_pred.append(0.0)
+        negative_x1_list.append(X[i][1])
+        negative_x2_list.append(X[i][2])
+
+print(accuracy_score(Y,x_pred))
+    
+ 
+decision_x1_sk=np.array(range(0,8))
+decision_x2_sk=-(1/float(sk_log.coef_[0][2]))*(float(2*sk_log.coef_[0][0])+float(sk_log.coef_[0][1])*decision_x1_sk)
+decision_x2_NR=-(1/float(theta[2]))*(float(theta[0])+float(theta[1])*decision_x1_sk)
+
+plt.figure('NR log i sklearn')
+plt.title('op cvrc grafik')
+plt.scatter(positive_x1_list, positive_x2_list, marker='+')
+plt.scatter(negative_x1_list,negative_x2_list,marker='*')
+plt.plot(decision_x1_sk,decision_x2_sk,label='sk_learn')
+plt.plot(decision_x1_sk,decision_x2_NR,label='Newton-Rapson')
+plt.xlabel('X1')
+plt.ylabel('X2')
+plt.legend()
+plt.show()
+
+
