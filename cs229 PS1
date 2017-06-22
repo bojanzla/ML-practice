@@ -71,41 +71,57 @@ sk_log=linear_model.LogisticRegression(C=1e5)
 sk_log.fit(X,Y.ravel())
 
 print(sk_log.coef_)
-def log_model(x):
-    return 1/(1+np.exp(-(x.dot(sk_log.coef_.T))))
+def log_model(x,coeff):
+    return 1/(1+np.exp(-(x.dot(coeff))))
 
-x_pred=[]
+test_classes=[]
+model_pred_NR=[]
+model_pred_sk=[]
 positive_x1_list=[]
 positive_x2_list=[]
 negative_x1_list=[]
 negative_x2_list=[]
-X_pred=log_model(X)
+X_pred_NR=log_model(X,theta)
+X_pred_sk=log_model(X,sk_log.coef_.T)
 for i in range(m):
     if y['Y'][i]>=0.5:
-        x_pred.append(1.0)
+        test_classes.append(1.0)
         positive_x1_list.append(X[i][1])
         positive_x2_list.append(X[i][2])
     else:
-        x_pred.append(0.0)
+        test_classes.append(0.0)
         negative_x1_list.append(X[i][1])
         negative_x2_list.append(X[i][2])
 
-print(accuracy_score(Y,x_pred))
+for i in range(m):
+    if X_pred_NR[i]>=0.5:
+        model_pred_NR.append(1.0)
+    else:
+        model_pred_NR.append(0.0)
+    if X_pred_sk[i]>=0.5:
+        model_pred_sk.append(1.0)
+    else:
+        model_pred_sk.append(0.0) 
+
+print(accuracy_score(Y,model_pred_NR))
+print(accuracy_score(Y,model_pred_sk))
     
  
 decision_x1_sk=np.array(range(0,8))
-decision_x2_sk=-(1/float(sk_log.coef_[0][2]))*(float(2*sk_log.coef_[0][0])+float(sk_log.coef_[0][1])*decision_x1_sk)
+decision_x2_sk=-(1/float(sk_log.coef_[0][2]))*(float(sk_log.coef_[0][0])+float(sk_log.coef_[0][1])*decision_x1_sk)
 decision_x2_NR=-(1/float(theta[2]))*(float(theta[0])+float(theta[1])*decision_x1_sk)
 
+
 plt.figure('NR log i sklearn')
-plt.title('op cvrc grafik')
+plt.title('Logistic Regression')
+plt.clf()
 plt.scatter(positive_x1_list, positive_x2_list, marker='+')
 plt.scatter(negative_x1_list,negative_x2_list,marker='*')
 plt.plot(decision_x1_sk,decision_x2_sk,label='sk_learn')
 plt.plot(decision_x1_sk,decision_x2_NR,label='Newton-Rapson')
+plt.text(6,-4,'NR= '+str(accuracy_score(Y,model_pred_NR))+'\nsk= '+str(accuracy_score(Y,model_pred_sk)))
 plt.xlabel('X1')
 plt.ylabel('X2')
 plt.legend()
 plt.show()
-
 
