@@ -5,6 +5,8 @@ Created on May 3, 2017
 
 '''
 
+# remote izmena
+
 import pandas as pd
 import numpy as np
 from numpy.linalg import inv
