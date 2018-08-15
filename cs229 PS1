@@ -6,6 +6,7 @@ Created on May 3, 2017
 '''
 
 # remote izmena
+# remote izmena 2
 
 import pandas as pd
 import numpy as np
